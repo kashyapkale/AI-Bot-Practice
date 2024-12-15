@@ -45,39 +45,51 @@ def get_agent_response(conversation_history, user_input, menu, user_order, clien
         for item in items:
             system_prompt += f" - {item['name']} (${item['price']})\n"
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-    ]
+    instruction_prompt = ''
+    instruction_prompt += (
+        "\nYour response should always be in JSON and have two keys (\"reply\", \"action\"), \n When the user is sure and wants to add an item to their order, respond in this format:\n"
+        "{\n"
+        '  "reply": "Your response to the user",\n'
+        '  "action": {"add_item_id": "ID of the item to add"}\n'
+        "}\n"
+        "If the user has finalised the order:\n"
+        "{\n"
+        '  "reply": "Your response to the user",\n'
+        '  "action": -1\n'
+        "}\n"
+        "In any other case:\n"
+        "{\n"
+        '  "reply": "Your response to the user",\n'
+        '  "action": null\n'
+        "}"
+    )
+
+    system_prompt += "\n You must respond in the exact format specified above. Do not deviate from this format under any circumstances."
+
+    messages = []
 
     for turn in conversation_history:
         messages.append({"role": turn['role'], "content": turn['message']})
 
-    messages.append({"role": "user", "content": user_input})
+    messages.append({"role": "system", "content": instruction_prompt})
 
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
-            max_tokens=150,
-            temperature=0.7,
+            max_tokens=1000,
+            temperature=0,
             n=1,
             stop=None
         )
-        agent_message = response.choices[0].message.content.strip()
 
-        if any(keyword in user_input.lower() for keyword in ["i would like", "i want", "add", "order"]):
-            item_name = extract_item_name(user_input, menu)
-            if item_name:
-                item = find_item_by_name(item_name, menu)
-                if item:
-                    user_order.append(item['id'])
-                    print(f"Debug: Added item ID to order: {item['id']}")  # Debugging statement
-                    agent_message += f" I've added the {item['name']} to your order."
-                else:
-                    agent_message += " Sorry, I couldn't find that item on the menu."
-            else:
-                agent_message += " Could you please specify the item you'd like to order?"
-
+        response_message = response.choices[0].message.content.strip()
+        parsed_response = json.loads(response_message)
+        agent_message=parsed_response.get("reply")
+        print("------Debug-----")
+        print(parsed_response.get("action"))
+        print("------Debug End-----")
+        #agent_message = parsed_response.get("reply")
         return agent_message
     except Exception as e:
         print(f"Error communicating with OpenAI API: {e}")
