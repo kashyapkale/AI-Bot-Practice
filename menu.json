@@ -1,0 +1,17 @@
+{
+  "categories": {
+    "burgers": [
+      {"id": "b1", "name": "Veg Burger", "price": 5.99},
+      {"id": "b2", "name": "Chicken Burger", "price": 6.99},
+      {"id": "b3", "name": "Beef Burger", "price": 7.99}
+    ],
+    "pizzas": [
+      {"id": "p1", "name": "Margherita", "price": 8.99},
+      {"id": "p2", "name": "Pepperoni", "price": 9.99}
+    ],
+    "drinks": [
+      {"id": "d1", "name": "Coke", "price": 1.99},
+      {"id": "d2", "name": "Orange Juice", "price": 2.49}
+    ]
+  }
+}
